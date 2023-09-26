@@ -1,45 +1,41 @@
 from __future__ import annotations
 import logging
 
-
 class LogAndPrint:
     """
-    A class for creating log file and printing log messages to console
+    LogAndPrint creates log file and print log messages to console
 
-    LogAndPrint allow developer to generate multiple logging entities,
-    set level of logging and location of log file.
-
-    Args:
-        text_to_log -- string, text that will be logged
-        print_to_screen -- bool, option for printing text to console output
-        type_of_event -- string, name of the log event attribute (debug, info, warning, error)
-        formatter -- string, format string content displayed by logger
-
-    Returns: LogAndPrint returns its self, instance of LogAndPrint
-
+    Allow developer to generate multiple logging entities,
+    set log level, name log file and print message to console.
     """
 
     def __init__(self, text: str, screen: bool, event: str, *args) -> LogAndPrint:
-        set_level = ''
         """
         Initialize LogAndPrint class using *args input arguments.
 
         In the *args list, the first indexed argument (zero) sets the text_to_log public var. The second
         indexed argument (one) set print_to_screen public var. Following is the type_of_event public var
-        set by the third indexed argument (two)
+        set by the third indexed argument (two). The other two arguments log_file_name and set_default_level
 
         Args:
             text_to_log -- string, text that will be logged
             print_to_screen -- bool, option for printing text to console output
             type_of_event -- string, name of the log event attribute (debug, info, warning, error)
-            formatter -- string, format string content displayed by logger
             log_file_name -- name and path location of log file
             set_default_level -- set the level for logger
+            formatter -- string, format string content displayed by logger
 
         Returns: LogAndPrint returns its self, instance of LogAndPrint
         """
         # dictionary for setting default logging level
-        SET_LEVEL = {'info' : logging.INFO, 'debug' : logging.DEBUG, 'warning' : logging.WARNING}
+        SET_LEVEL = {
+            'info' : logging.INFO,
+            'debug' : logging.DEBUG,
+            'warning' : logging.WARNING,
+            'error' : logging.ERROR,
+            'critical' : logging.CRITICAL,
+            'notset' : logging.NOTSET
+            }
         # Set public variables, these are required.
         self.text_to_log = text
         self.print_to_screen = screen
@@ -57,15 +53,15 @@ class LogAndPrint:
 
         # create message formatter
         self.formatter = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        
+
         # configure how the logger is setup
-        logging.basicConfig(filename=self.log_file_name, filemode='a', encoding='UTF-8', level=logging.DEBUG, format=self.formatter)
+        logging.basicConfig(filename=self.log_file_name, filemode='a', encoding='UTF-8', datefmt='%m-%d %H:%M', level=logging.DEBUG, format=self.formatter)
 
         # create new logger with name of the class and then set level
         self.Logger = logging.getLogger(__name__)
         self.Logger.setLevel(SET_LEVEL[self.set_default_level]) # Debug: need to new logic to allow user to define default logging level
 
-    def update_args(self, **kwargs):
+    def update_args(self, **kwargs) -> None:
         """
         Uses three keyword arguments to update public variables text_to_log, print_to_screen & type_of_event
 
@@ -73,10 +69,20 @@ class LogAndPrint:
             text: value is stored in text_to_log
             screen: value is stored in print_to_screen
             event: value is stored in type_of_event
+            fname: name of log file
+            level: default level of logging
         """
-        self.text_to_log = kwargs['text']
-        self.print_to_screen = kwargs['screen']
-        self.type_of_event = kwargs['event']
+        for kwarg in kwargs:
+            if (kwarg == 'text'):
+                self.text_to_log = kwargs[kwarg]
+            elif (kwarg == 'screen'):
+                self.print_to_screen = kwargs[kwarg]
+            elif (kwarg == 'event'):
+                self.type_of_event = kwargs[kwarg]
+            elif (kwarg == 'fname'):
+                self.log_file_name = kwargs[kwarg]
+            elif (kwarg == 'level'):
+                self.set_default_level = kwargs[kwarg]
 
     def arbitrate_log(self) -> int:
         """
@@ -95,6 +101,8 @@ class LogAndPrint:
                 self.Logger.debug(self.text_to_log)
             case 'error':
                 self.Logger.error(self.text_to_log)
+            case 'critical':
+                self.Logger.critical(self.text_to_log)
             case _:
                 print(f'Could not log information, did not recognize log method {self.type_of_event}')
                 success = 1
@@ -121,13 +129,16 @@ class LogAndPrint:
 if __name__ == '__main__':
     # create logger instance my_logger
     my_logger = LogAndPrint('Hey what it is man!!!', True, 'warning', 'default.log')
-    print("This is my first Log And Print statement")
     my_logger.main()
+    print("My first Log And Print statement is above.\n")
 
     # update my_logger type of event to debug
     my_logger.type_of_event = 'debug'
     # new content being logged with debug message
-    print("Here is the second Log And Print statement")
-    content_to_log = {'text':'This is my new message now!!!', 'screen':True, 'event':'info'}
+    content_to_log = {
+        'text':'This is my new message now!!!',
+        'screen':True,
+        'event':'critical'
+        }
     my_logger.main(**content_to_log)
-
+    print("My second Log And Print statement is above.\n")
